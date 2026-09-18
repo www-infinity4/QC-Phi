@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "id": "infinity-search-token",
+      "system": "Infinity Phi",
+      "trigger": "successful search",
+      "expected": [
+        "one token transaction is created immediately",
+        "transaction persists in the token ledger",
+        "wallet tally refreshes without another page action"
+      ],
+      "severity": "high"
+    },
+    {
+      "id": "collection-handoff",
+      "system": "Phi media collection",
+      "trigger": "collect image/video/audio",
+      "expected": [
+        "selected item remains in active search collection",
+        "AI Overview receives the same collection"
+      ],
+      "severity": "high"
+    },
+    {
+      "id": "website-index-handoff",
+      "system": "Infinity Phi",
+      "trigger": "send collected card to Website Index",
+      "expected": [
+        "card appears in Website Index with source/media identity intact"
+      ],
+      "severity": "high"
+    },
+    {
+      "id": "share-preview",
+      "system": "Phi cards",
+      "trigger": "share",
+      "expected": [
+        "share target opens",
+        "OG/X metadata contains title description and image when available"
+      ],
+      "severity": "medium"
+    },
+    {
+      "id": "feed-continuity",
+      "system": "News Phi / Builder Reserve",
+      "trigger": "upstream collection change",
+      "expected": [
+        "metadata/index feed remains reachable and receives intended content"
+      ],
+      "severity": "high"
+    }
+  ]
+}
