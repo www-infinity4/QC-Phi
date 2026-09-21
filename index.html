@@ -1,12 +1,45 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QC Phi</title><style>body{font-family:system-ui;background:#101014;color:#fff;margin:0;padding:18px}main{max-width:940px;margin:auto}.card{background:#1c1c23;border:1px solid #444;border-radius:15px;padding:15px;margin:12px 0}button{padding:12px 15px;border:0;border-radius:10px;font-weight:800;margin:4px}textarea{width:100%;min-height:280px;background:#08080b;color:#fff;border:1px solid #555;border-radius:10px;padding:10px;box-sizing:border-box}.pass{border-left:6px solid #35c46a}.fail{border-left:6px solid #ef5350}.warn{border-left:6px solid #f5c542}.muted{color:#aaa}code{word-break:break-all}.apps{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:650px){.apps{grid-template-columns:1fr}}</style></head><body><main><h1>QC Phi</h1><p>Automatic quality-control observer for Infinity Phi and Omni Phi.</p><div class="apps"><div class="card"><b>Infinity Phi</b><br><code>https://www-infinity4.github.io/C13b0/phi/</code></div><div class="card"><b>Omni Phi</b><br><code>https://www-infinity4.github.io/Omni-Phi/</code></div></div><div class="card"><p class="muted">Scans automatically at startup and every 60 seconds while open.</p><button onclick="runAll()">Scan both now</button><button onclick="recordShare('Infinity Phi')">Infinity share failed</button><button onclick="recordShare('Omni Phi')">Omni share failed</button><button onclick="recordToken()">Search gave no token</button><button onclick="takeAction()">Take Action with GPT</button></div><div id="summary" class="card">Starting scan…</div><div id="results"></div><h2>AI repair message</h2><textarea id="ticket" readonly></textarea><button onclick="copyTicket()">Copy repair message</button><script>
-const APPS=[{name:'Infinity Phi',url:'https://www-infinity4.github.io/C13b0/phi/',repo:'www-infinity4/C13b0',raw:'https://raw.githubusercontent.com/www-infinity4/C13b0/main/'},{name:'Omni Phi',url:'https://www-infinity4.github.io/Omni-Phi/',repo:'www-infinity4/Omni-Phi',raw:'https://raw.githubusercontent.com/www-infinity4/Omni-Phi/main/'}];
+const APPS=[{name:'Infinity Phi',url:'https://www-infinity4.github.io/C13b0/phi/',repo:'www-infinity4/C13b0'},{name:'Omni Phi',url:'https://www-infinity4.github.io/Omni-Phi/',repo:'www-infinity4/Omni-Phi'}];
+const ROUTES=[
+ {system:'Infinity Phi',contract:'Application route',url:'https://www-infinity4.github.io/C13b0/phi/',repo:'www-infinity4/C13b0',expect:'html'},
+ {system:'Omni Phi',contract:'Application route',url:'https://www-infinity4.github.io/Omni-Phi/',repo:'www-infinity4/Omni-Phi',expect:'html'},
+ {system:'News Phi',contract:'Feed route',url:'https://www-infinity4.github.io/News-Phi/',repo:'www-infinity4/News-Phi',expect:'html'},
+ {system:'Builder Reserve',contract:'Feed route',url:'https://www-infinity4.github.io/Builder-Reserve/',repo:'www-infinity4/Builder-Reserve',expect:'html'},
+ {system:'StarQuest Ledger',contract:'Worker health',url:'https://starquest-ledger.marvaseater.workers.dev/health',repo:'www-infinity4/TV-Database',expect:'health'},
+ {system:'Infinity Assets',contract:'Worker health',url:'https://infinity-assets.marvaseater.workers.dev/health',repo:'www-infinity4/TV-Database',expect:'health'},
+ {system:'Electri Phi',contract:'Worker health',url:'https://electri-phi-handbook.marvaseater.workers.dev/health',repo:'www-infinity4/Electri-Phi-Handbook',expect:'health'}
+];
 let findings=[];const results=document.getElementById('results'),ticket=document.getElementById('ticket'),summary=document.getElementById('summary');
-function F(system,contract,status,observed,expected,target,severity='high'){return {schema:'qc-phi-ticket/v2',system,repository:APPS.find(a=>a.name===system)?.repo,contract,status,severity,timestamp:new Date().toISOString(),expected,observed,inspectionTarget:target}}
+function F(system,contract,status,observed,expected,target,severity='high'){return {schema:'qc-phi-ticket/v2',system,repository:APPS.find(a=>a.name===system)?.repo||ROUTES.find(a=>a.system===system)?.repo,contract,status,severity,timestamp:new Date().toISOString(),expected,observed,inspectionTarget:target}}
 function draw(x){const d=document.createElement('div');d.className='card '+(x.status==='pass'?'pass':x.status==='fail'?'fail':'warn');d.innerHTML='<b>'+x.system+' · '+x.contract+'</b><br>'+x.status.toUpperCase()+' — '+x.observed;results.appendChild(d)}
-function compile(){const bad=findings.filter(x=>x.status!=='pass');summary.textContent=findings.length+' checks across Infinity + Omni · '+bad.length+' need attention';ticket.value=JSON.stringify({schema:'qc-phi-handoff/v2',generatedAt:new Date().toISOString(),ownerScope:'wallet-authenticated owner',failures:bad,repairRules:['Verify deployed behavior before editing.','Use repository write access only after owner authorization.','Never place GitHub or GPT secrets in browser JavaScript, localStorage, generated websites, or public repositories.','Trace trigger -> durable receipt/ledger -> destination/UI.','Make the smallest repair and preserve passing contracts.','Rerun Infinity and Omni regression scans after every repair.']},null,2)}
-async function probe(app){try{const r=await fetch(app.url,{cache:'no-store'});const x=F(app.name,'Application reachability',r.ok?'pass':'fail','HTTP '+r.status,'Application returns HTTP success',app.url);findings.push(x);draw(x)}catch(e){const x=F(app.name,'Application reachability','warn','Browser inspection blocked: '+e.message,'Application is reachable',app.url,'medium');findings.push(x);draw(x)}}
-async function inspect(app){const candidates=app.name==='Infinity Phi'?['public/infinity-phi-result-tools.js']:['index.html','cards/index.html','public/index.html'];let source='';let sourcePath='';for(const p of candidates){try{const r=await fetch(app.raw+p,{cache:'no-store'});if(r.ok){source=await r.text();sourcePath=p;break}}catch{}}if(!source){const x=F(app.name,'Source inspection','warn','No candidate source could be read from browser','QC can inspect a deployed source contract',app.repo,'medium');findings.push(x);draw(x);return}const checks=[['Wallet/token wiring',/(token|wallet|ledger|mint)/i,'Token/wallet/ledger integration exists'],['Share wiring',/(share|navigator\.share|twitter|x\.com)/i,'Share action is instrumented'],['Collection wiring',/(collect|collection|phiShared)/i,'Collection handoff exists'],['QC receipt wiring',/(qc[-_: ]?phi|quality[-_: ]?receipt|qcReceipt)/i,'Actions publish durable QC receipts']];for(const [n,re,e] of checks){const ok=re.test(source);const x=F(app.name,n,ok?'pass':'fail',ok?'Wiring marker found in '+sourcePath:'Required marker not found in '+sourcePath,e,sourcePath);findings.push(x);draw(x)}}
-async function runAll(){findings=[];results.replaceChildren();summary.textContent='Scanning Infinity Phi + Omni Phi…';for(const app of APPS){await probe(app);await inspect(app)}compile()}
+function compile(){const bad=findings.filter(x=>x.status!=='pass');summary.textContent=findings.length+' deployed route checks · '+bad.length+' need attention';ticket.value=JSON.stringify({schema:'qc-phi-handoff/v2',generatedAt:new Date().toISOString(),ownerScope:'wallet-authenticated owner',failures:bad,repairRules:['Verify deployed behavior before editing.','Use repository write access only after owner authorization.','Never place GitHub or GPT secrets in browser JavaScript, localStorage, generated websites, or public repositories.','Trace trigger -> durable receipt/ledger -> destination/UI.','Make the smallest repair and preserve passing contracts.','Rerun Infinity and Omni regression scans after every repair.']},null,2)}
+async function probeRoute(route){
+ const started=performance.now();
+ try{
+  const r=await fetch(route.url,{cache:'no-store',redirect:'follow'});
+  const ms=Math.round(performance.now()-started);
+  let status=r.ok?'pass':'fail',detail='HTTP '+r.status+' in '+ms+'ms';
+  if(r.ok&&route.expect==='health'){
+   let body=null;try{body=await r.clone().json()}catch{}
+   if(!body||body.ok!==true){status='fail';detail+=' · health payload missing ok:true'}
+   else detail+=' · health ok';
+  }
+  if(r.ok&&route.expect==='html'){
+   const type=r.headers.get('content-type')||'';
+   if(!type.includes('text/html')){status='fail';detail+=' · expected HTML, received '+(type||'unknown content type')}
+  }
+  const x=F(route.system,route.contract,status,detail,'Deployed route returns the expected successful response',route.url,status==='fail'?'high':'medium');
+  findings.push(x);draw(x);
+ }catch(e){
+  const x=F(route.system,route.contract,'warn','Browser could not inspect route: '+e.message,'Deployed route is directly observable',route.url,'medium');
+  findings.push(x);draw(x);
+ }
+}
+async function runAll(){
+ findings=[];results.replaceChildren();summary.textContent='Checking deployed pages and Worker health routes…';
+ for(const route of ROUTES)await probeRoute(route);
+ compile();
+}
 function recordShare(system){const x=F(system,'Share round-trip','fail','Share was used but no durable QC receipt appeared',['share emits durable receipt','wallet/share reward can be verified','QC can associate receipt with owner + site identity'],'share -> QC receipt -> wallet/ledger');findings.unshift(x);draw(x);compile()}
 function recordToken(){const x=F('Infinity Phi','Search token credit','fail','Search completed but token was not calculated/credited',['one successful search creates one token transaction immediately','ledger persists owner + site identity','wallet refreshes immediately'],'search -> token ledger -> unified wallet');findings.unshift(x);draw(x);compile()}
 function takeAction(){compile();const payload=encodeURIComponent(ticket.value);const worker=localStorage.getItem('qcPhi:gptWorkerUrl');if(worker){location.href=worker+(worker.includes('?')?'&':'?')+'qcTicket='+payload;return}alert('Take Action is ready for a private owner-only GPT worker endpoint. Do not put a GitHub write token or GPT secret in this public page. Configure the worker endpoint behind owner authentication, then QC can send this repair ticket to it.')}
