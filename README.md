@@ -4,7 +4,10 @@ Quality-control observer for the Phi network.
 
 QC Phi does **not** repair production applications itself. It observes expected contracts, records failures, and emits repair tickets that can be handed to Code Phi or another coding agent.
 
+See [OBSERVER-REACTOR-MAP.md](OBSERVER-REACTOR-MAP.md) for the current system owners, dependency map, contract inventory, safety rules, and ordered repair backlog.
+
 ## First contracts
+
 - Infinity Phi successful search -> token ledger transaction -> wallet tally refresh
 - Collect -> destination receives the same selected card/media
 - AI Overview handoff preserves selected image/video/audio collections
