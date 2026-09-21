@@ -35,9 +35,32 @@ async function probeRoute(route){
   findings.push(x);draw(x);
  }
 }
+async function probeTokenContinuity(){
+ const evidence=[];
+ let failed=false;
+ for(const page of TOKEN_FLOW.pages){
+  const url='https://www-infinity4.github.io/Omni-Phi/'+page+'/?'+new URLSearchParams({q:TOKEN_FLOW.query,token:TOKEN_FLOW.token});
+  try{
+   const r=await fetch(url,{cache:'no-store',redirect:'follow'});
+   const source=await r.text();
+   const acceptsToken=/[?&]token=qc-token-continuity-v1/.test(r.url)||source.includes('p.get("token")')||source.includes("p.get('token')");
+   const propagatesToken=page==='overview'||/URLSearchParams\(\{q:base,token\}\)|searchParams\.set\(["']token["'],\s*token\)/.test(source);
+   const storesToken=page==='overview'||/tokenId\s*:\s*token/.test(source);
+   const ok=r.ok&&acceptsToken&&propagatesToken&&storesToken;
+   failed ||= !ok;
+   evidence.push(page+': HTTP '+r.status+', accepts='+acceptsToken+', propagates='+propagatesToken+', stores='+storesToken);
+  }catch(e){failed=true;evidence.push(page+': blocked '+e.message)}
+ }
+ const selected=(()=>{try{return JSON.parse(localStorage.getItem('omniPhi:mediaSelections:v1')||'[]')}catch{return[]}})();
+ const mismatched=selected.filter(x=>x&&x.tokenId&&x.tokenId!==TOKEN_FLOW.token&&x.qcProbe===true).length;
+ if(mismatched){failed=true;evidence.push('QC-tagged selections with a different token: '+mismatched)}
+ const x=F(TOKEN_FLOW.system,'Token continuity: images → video → audio → overview',failed?'fail':'pass',evidence.join(' | '),'Every media page accepts, propagates and stores the same originating token','Omni-Phi media routes and omniPhi:mediaSelections:v1',failed?'critical':'medium');
+ findings.push(x);draw(x);
+}
 async function runAll(){
- findings=[];results.replaceChildren();summary.textContent='Checking deployed pages and Worker health routes…';
+ findings=[];results.replaceChildren();summary.textContent='Checking deployed routes and token continuity…';
  for(const route of ROUTES)await probeRoute(route);
+ await probeTokenContinuity();
  compile();
 }
 function recordShare(system){const x=F(system,'Share round-trip','fail','Share was used but no durable QC receipt appeared',['share emits durable receipt','wallet/share reward can be verified','QC can associate receipt with owner + site identity'],'share -> QC receipt -> wallet/ledger');findings.unshift(x);draw(x);compile()}
