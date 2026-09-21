@@ -33,7 +33,7 @@ QC Phi is the network observer. It must detect broken contracts, preserve eviden
 |---|---|---|---|---|
 | Search token continuity | Successful fresh first-page search | Token ledger transaction | One token exists across overview, images, video and audio refinements | Critical |
 | Media collection handoff | Collect image/video/audio | Token-scoped collection receipt | AI Overview receives every selected item without creating a new token | Critical |
-| Website Index handoff | Collect/build action | Card IDs plus originating token | Website Index contains the chosen cards | High |
+| Builder output handoff | Generate Website action | Build receipt plus originating token | Builder produces the finished website package | High |\n| Web Phi publication | Publish finished website | Published-site ID, title, URL and searchable metadata | Web Phi displays and searches completed websites; deferred until builder pages are finished | Deferred |
 | News Phi derivation | Collect source card | Stored keyword/entity provenance | Fresh source-backed story cards are generated; copied source card is not displayed as news | High |
 | Builder Reserve feed | Create purple research direction | Indexed idea receipt | Purple idea appears with provenance and build routes | Medium |
 | Star Coin share payout | Confirmed share | Idempotent ledger receipt | +0.1 progress; one Star Coin per ten confirmed shares; wallet refreshes | Critical |
@@ -56,7 +56,7 @@ QC Phi is the network observer. It must detect broken contracts, preserve eviden
 
 1. Replace source-marker checks with route and round-trip checks.
 2. Add one token-continuity probe covering overview → images → video → audio → overview.
-3. Add collection destination probes for AI Overview, Website Index, News Phi and Builder Reserve.
+3. Add collection destination probes for AI Overview, News Phi and Builder Reserve. Add Web Phi publication checks after the builder pages are finished.
 4. Add StarQuest ledger read/write/read verification using uniquely tagged disposable test receipts.
 5. Add share-payout idempotency verification: the same receipt must never credit twice.
 6. Add infinity-assets registration/search/reuse verification.
